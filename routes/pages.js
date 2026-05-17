@@ -25,7 +25,18 @@ router.get('/watch/:id', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM videos WHERE id = ?', [req.params.id]);
     if (rows.length === 0) return res.status(404).send('Video not found');
-    res.render('watch', { video: rows[0] });
+
+    const [recRows] = await pool.query('SELECT * FROM videos WHERE id != ? ORDER BY RAND() LIMIT 5', [req.params.id]);
+    const recommendedVideos = recRows.map(v => {
+      const id = extractGDriveId(v.video_url);
+      return {
+        ...v,
+        gdrive_id: id,
+        thumbnail_url: id ? `https://drive.google.com/thumbnail?id=${id}&sz=w600` : null
+      };
+    });
+
+    res.render('watch', { video: rows[0], recommendedVideos });
   } catch (err) {
     console.error(err);
     res.status(500).send('Database error');

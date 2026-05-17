@@ -23,6 +23,27 @@
       </div>
       <p class="text-gray-600 text-sm mt-3">Diunggah <%= new Date(video.created_at).toLocaleDateString('id-ID', {year:'numeric',month:'long',day:'numeric'}) %></p>
     </div>
+    <% if (recommendedVideos && recommendedVideos.length > 0) { %>
+      <div class="mt-10">
+        <h2 class="text-xl font-bold mb-4">Rekomendasi Video Lain</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <% recommendedVideos.forEach(r => { %>
+            <a href="/watch/<%= r.id %>" class="group bg-dark-800 rounded-xl overflow-hidden border border-dark-600 hover:border-red-500/50 transition-all duration-200">
+              <div class="aspect-video bg-dark-700 overflow-hidden">
+                <% if (r.thumbnail_url) { %>
+                  <img src="<%= r.thumbnail_url %>" alt="<%= r.title %>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                <% } else { %>
+                  <div class="w-full h-full flex items-center justify-center text-gray-500">No Thumbnail</div>
+                <% } %>
+              </div>
+              <div class="p-3">
+                <h3 class="font-semibold text-sm group-hover:text-red-400 transition-colors line-clamp-2"><%= r.title %></h3>
+              </div>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
     <a href="/" class="inline-block mt-6 text-sm text-red-400 hover:underline">&larr; Kembali</a>
   </main>
 </body>
