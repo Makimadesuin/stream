@@ -43,6 +43,35 @@ router.get('/watch/:id', async (req, res) => {
   }
 });
 
+router.get('/api/more-videos', async (req, res) => {
+  try {
+    const exclude = req.query.exclude;
+    let rows;
+    if (exclude) {
+      const ids = exclude.split(',').map(Number).filter(id => !isNaN(id) && id > 0);
+      if (ids.length > 0) {
+        [rows] = await pool.query('SELECT * FROM videos WHERE id NOT IN (?) ORDER BY RAND() LIMIT 5', [ids]);
+      } else {
+        [rows] = await pool.query('SELECT * FROM videos ORDER BY RAND() LIMIT 5');
+      }
+    } else {
+      [rows] = await pool.query('SELECT * FROM videos ORDER BY RAND() LIMIT 5');
+    }
+    const videos = rows.map(v => {
+      const id = extractGDriveId(v.video_url);
+      return {
+        ...v,
+        gdrive_id: id,
+        thumbnail_url: id ? `https://drive.google.com/thumbnail?id=${id}&sz=w600` : null
+      };
+    });
+    res.json({ videos });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 router.post('/admin/delete/:id', async (req, res) => {
   try {
     await pool.query('DELETE FROM videos WHERE id = ?', [req.params.id]);
