@@ -1,0 +1,155 @@
+<%
+function getInlineDriveId(url) {
+  if (!url) return '';
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : '';
+}
+%>
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamKu - Video Streaming</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          animation: { 'fade-in': 'fadeIn 0.6s ease-out both' },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .card-fade { animation: fadeIn 0.6s ease-out both; }
+    .card-fade:nth-child(1) { animation-delay: 0.05s; }
+    .card-fade:nth-child(2) { animation-delay: 0.10s; }
+    .card-fade:nth-child(3) { animation-delay: 0.15s; }
+    .card-fade:nth-child(4) { animation-delay: 0.20s; }
+    .card-fade:nth-child(5) { animation-delay: 0.25s; }
+    .card-fade:nth-child(6) { animation-delay: 0.30s; }
+    .card-fade:nth-child(7) { animation-delay: 0.35s; }
+    .card-fade:nth-child(8) { animation-delay: 0.40s; }
+  </style>
+</head>
+<body class="bg-[#0a0a0a] text-gray-100 min-h-screen">
+  <header class="bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <h1 class="text-xl font-bold tracking-tight">Stream<span class="text-emerald-400">Ku</span></h1>
+    <div class="flex items-center gap-4">
+      <div id="adminPanel" class="hidden items-center gap-3">
+        <a href="/admin/upload" class="text-sm bg-emerald-600 hover:bg-emerald-500 hover:scale-105 px-5 py-2 rounded-xl transition-all duration-300 font-semibold shadow-lg shadow-emerald-500/20">+ Upload Baru</a>
+        <a href="/" class="text-sm text-gray-400 hover:text-white transition">Kembali ke Dashboard</a>
+      </div>
+      <div id="userPanel" class="flex items-center gap-3">
+        <a href="/admin/upload" class="text-sm bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition">Upload</a>
+        <button onclick="enableAdmin()" class="text-sm bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl transition font-medium">Mode Admin</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <% if (videos.length === 0) { %>
+      <div class="text-center py-20 text-gray-500 animate-fade-in">
+        <p class="text-5xl mb-4">📂</p>
+        <p class="text-lg">Belum ada video. <a href="/admin/upload" class="text-emerald-400 underline hover:text-emerald-300">Upload sekarang</a></p>
+      </div>
+    <% } else { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <% videos.forEach(video => { %>
+          <div class="card-fade group relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:scale-125 hover:z-50 hover:shadow-2xl hover:shadow-emerald-500/30 hover:border-emerald-400/50 hover:overflow-visible transition-all duration-300 ease-out cursor-pointer"
+               data-id="<%= video.id %>"
+               data-url="<%= video.video_url %>"
+               onmouseenter="preview(this)" onmouseleave="stopPreview(this)"
+               onclick="clickCard(event, <%= video.id %>)">
+            <% const currentId = getInlineDriveId(video.video_url); %>
+            <div class="relative w-full aspect-video overflow-hidden rounded-t-2xl">
+              <img src="https://drive.google.com/thumbnail?id=<%= currentId %>&sz=w600" alt="<%= video.title %>"
+                   class="thumb-img absolute inset-0 w-full h-full object-cover group-hover:opacity-0 transition-opacity duration-300 rounded-t-2xl"
+                   onerror="generateFallbackPoster(this, '<%= video.title.replace(/\\/g, '\\\\').replace(/'/g, "\\'") %>')">
+              <iframe class="thumb-video absolute inset-0 w-full h-full border-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      src="" allow="autoplay; encrypted-media"></iframe>
+            </div>
+            <div class="p-4">
+              <h2 class="font-semibold text-base truncate group-hover:text-emerald-300 transition-colors duration-300"><%= video.title %></h2>
+              <p class="text-gray-400 text-sm mt-1 line-clamp-2"><%= video.description || 'Tidak ada deskripsi' %></p>
+              <p class="text-gray-600 text-xs mt-2"><%= new Date(video.created_at).toLocaleDateString('id-ID') %></p>
+            </div>
+            <div class="admin-actions hidden absolute top-2 right-2 flex gap-2 z-20">
+              <a href="/admin/edit/<%= video.id %>" class="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-lg transition">Edit</a>
+              <form action="/admin/delete/<%= video.id %>" method="POST" onsubmit="return confirm('Hapus video <%= video.title %>?')">
+                <button type="submit" class="bg-red-600/80 backdrop-blur-md hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg transition">Hapus</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+
+    function enableAdmin() {
+      window.location.href = '?admin=true';
+    }
+
+    if (urlParams.get('admin') === 'true') {
+      document.getElementById('adminPanel').classList.remove('hidden');
+      document.getElementById('adminPanel').classList.add('flex');
+      document.getElementById('userPanel').classList.add('hidden');
+      document.querySelectorAll('.admin-actions').forEach(el => el.classList.remove('hidden'));
+    }
+
+    function generateFallbackPoster(img, title) {
+      var canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 400;
+      var ctx = canvas.getContext('2d');
+      var gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#0f172a');
+      gradient.addColorStop(1, '#064e3b');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      var initial = title ? title.trim().charAt(0).toUpperCase() : 'V';
+      ctx.font = 'bold 120px sans-serif';
+      ctx.fillStyle = '#10b981';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initial, canvas.width / 2, canvas.height / 2);
+      img.src = canvas.toDataURL();
+      img.onerror = null;
+    }
+
+    function preview(el) {
+      var img = el.querySelector('.thumb-img');
+      var video = el.querySelector('.thumb-video');
+      if (img) img.style.opacity = '0';
+      if (video) {
+        video.src = el.dataset.url + '?autoplay=1&mute=1';
+      }
+    }
+
+    function stopPreview(el) {
+      var img = el.querySelector('.thumb-img');
+      var video = el.querySelector('.thumb-video');
+      if (img) img.style.opacity = '1';
+      if (video) {
+        video.src = '';
+      }
+    }
+
+    function clickCard(e, id) {
+      if (e.target.closest('a') || e.target.closest('form')) return;
+      window.location.href = '/watch/' + id;
+    }
+  </script>
+</body>
+</html>
