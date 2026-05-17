@@ -9,6 +9,8 @@ const pool = mysql.createPool({
   queueLimit: 0,
   // 👇 SELIPKAN KODE INI DI BAWAH QUEUELIMIT (JANGAN LUPA KOMA SEBELUMNYA)
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: true,
+    minVersion: 'TLSv1.2'
+  
   }
 });
